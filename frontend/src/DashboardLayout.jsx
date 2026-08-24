@@ -173,10 +173,6 @@ export default function DashboardLayout() {
                         <i className="fa-solid fa-bell text-warning"></i> <span id="notifBellLabel">Register SMS / Email Alerts</span>
                     </button>
 
-                    <button id="facultyAdminNotificationsBtn" className="btn btn-sm btn-outline-info d-flex align-items-center gap-1" style={{display: "none"}} onClick={() => window.showAdminLeaveNotif()} >
-                        <i className="fa-solid fa-bell text-warning"></i> <span>Notifications</span>
-                    </button>
-
                     
                     <button id="manageResourcesBtn" className="btn btn-sm btn-outline-info d-flex align-items-center gap-1"
                             type="button" data-bs-toggle="modal" data-bs-target="#adminResourcesModal" style={{display: "none"}}>
@@ -623,14 +619,15 @@ export default function DashboardLayout() {
                                             <input type="text" id="stdName" className="form-control form-control-sm bg-dark text-white border-secondary" placeholder="e.g. Mithil Pranav" required />
                                         </div>
                                         <div className="col-md-4">
-                                            <label className="form-label small mb-1">Section</label>
-                                            <select id="stdSection" className="form-select form-select-sm bg-dark text-white border-secondary">
+                                            <label className="form-label small mb-1">Section <span className="text-danger">*</span> <small className="text-muted">(pick or type new)</small></label>
+                                            <input type="text" id="stdSection" list="stdSecList" className="form-control form-control-sm bg-dark text-white border-secondary" placeholder="e.g. II CSE C" required autoComplete="off" />
+                                            <datalist id="stdSecList">
                                                 <option value="II CSE C">II CSE C</option>
                                                 <option value="II CSE A">II CSE A</option>
                                                 <option value="II CSE B">II CSE B</option>
                                                 <option value="II IT A">II IT A</option>
                                                 <option value="II AI&DS A">II AI&DS A</option>
-                                            </select>
+                                            </datalist>
                                         </div>
                                     </div>
                                     <div className="row g-2 mb-2">
@@ -671,15 +668,16 @@ export default function DashboardLayout() {
                                         <h6 className="fw-bold text-info"><i className="fa-solid fa-folder-plus me-1"></i> Add New Section</h6>
                                         <form id="addSectionForm" onSubmit={(event) => window.handleAddSection(event)} >
                                             <div className="mb-2">
-                                                <label className="form-label small">Department</label>
-                                                <select id="secDept" className="form-select form-select-sm bg-dark text-white border-secondary">
+                                                <label className="form-label small">Department <span className="text-danger">*</span> <small className="text-muted">(pick or type new)</small></label>
+                                                <input type="text" id="secDept" list="secDeptList" className="form-control form-control-sm bg-dark text-white border-secondary" placeholder="e.g. CSE" required autoComplete="off" />
+                                                <datalist id="secDeptList">
                                                     <option value="CSE">CSE - Computer Science & Engg</option>
                                                     <option value="IT">IT - Information Technology</option>
                                                     <option value="AIDS">AI&DS - Artificial Intelligence & DS</option>
                                                     <option value="ECE">ECE - Electronics & Comm</option>
                                                     <option value="EEE">EEE - Electrical & Electronics</option>
                                                     <option value="MECH">MECH - Mechanical Engg</option>
-                                                </select>
+                                                </datalist>
                                             </div>
                                             <div className="mb-2">
                                                 <label className="form-label small">Section Name</label>

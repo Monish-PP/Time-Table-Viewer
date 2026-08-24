@@ -1394,7 +1394,7 @@ function switchRole(role, silent = false) {
         }
     }
 
-    // Additional: Period Notifications
+    // Additional: Period Notifications (Visible to ALL roles so Admins can add them)
     const studentDayNotificationBtn = document.getElementById('studentDayNotificationBtn');
     if (studentDayNotificationBtn) {
         studentDayNotificationBtn.classList.remove('d-none');
@@ -1780,6 +1780,7 @@ function onFilterChange() {
     }
 
     renderTimetableGrid();
+    renderStudentsRoster();
 }
 
 // Manage Students & Sections Roster Handlers
@@ -1815,10 +1816,21 @@ function renderStudentsRoster() {
     const isStudent = currentUserRole === 'STUDENT';
 
     const visibleStudents = isStudent ? (currentStudentRecord() ? [currentStudentRecord()] : []) : studentsRoster;
+    
+    // Roster count on the students tab shows total available
     const rosterCountEl = document.getElementById('rosterCount');
     if (rosterCountEl) rosterCountEl.innerText = isStudent ? visibleStudents.length : studentsRoster.length;
+    
+    // Class Strength badge shows only the currently selected section's strength
     const strengthBadge = document.getElementById('classStrengthBadge');
-    if (strengthBadge && !isStudent) strengthBadge.innerText = `${studentsRoster.length} Students`;
+    if (strengthBadge && !isStudent) {
+        const activeSec = document.getElementById('sectionSelect') ? document.getElementById('sectionSelect').value : currentSection;
+        const sectionCount = studentsRoster.filter(s => {
+            const sn = (s.section && (s.section.sectionName || s.section.name)) || s.sec || '';
+            return sn.trim().toLowerCase() === String(activeSec).trim().toLowerCase();
+        }).length;
+        strengthBadge.innerText = `${sectionCount} Students`;
+    }
 
     const table = tbody.closest('table');
     const thead = table ? table.querySelector('thead tr') : null;
