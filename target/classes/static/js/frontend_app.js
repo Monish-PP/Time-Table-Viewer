@@ -207,6 +207,20 @@ function openForgotPasswordForLogin() {
 function restoreLoginSession() {
     const username = localStorage.getItem('sece_logged_in_user');
     const role = localStorage.getItem('sece_logged_in_role');
+    const hasBackendToken = !!localStorage.getItem('jwt_token');
+
+    if (hasBackendToken) {
+        try {
+            const userInfo = JSON.parse(localStorage.getItem('user_info') || '{}');
+            if (userInfo && userInfo.role) {
+                const shortRole = userInfo.role.replace('ROLE_', '');
+                switchRole(shortRole, true);
+            }
+        } catch (e) {
+            console.error('Error restoring backend session roles in UI', e);
+        }
+        return;
+    }
 
     if (username && role && isValidUsername(role, username) && getStoredPassword(username)) {
         currentUserRole = role;
@@ -314,8 +328,8 @@ function clearSavedStudents() {
 
 // System State
 let currentUserRole = null; // Set only after successful login
-let currentDept = 'CSE';
-let currentSection = 'CSE_C';
+let currentSection = localStorage.getItem('sece_last_viewed_section') || 'CSE_C';
+let currentDept = localStorage.getItem('sece_last_viewed_dept') || 'CSE';
 
 // Official Data Extracted from Uploaded Schedule Image (II CSE C)
 const DEFAULT_TIMETABLE_DATA = {
@@ -815,7 +829,7 @@ function findTodaysPeriodsForStaff(staffName) {
         const dayData = timetableData[section] && timetableData[section][todayName];
         if (!dayData) return;
         dayData.forEach((p, pIdx) => {
-            if (p && p.faculty === staffName) {
+            if (p && p.faculty && p.faculty.includes(staffName)) {
                 results.push({ section, day: todayName, pIdx, subject: p.sub, venue: p.venue });
             }
         });
@@ -1410,6 +1424,10 @@ function openEditPeriodModal(day, pIdx, pData) {
     document.getElementById('editPeriod').value = pIdx;
     document.getElementById('editSlotLabel').value = `${day} - Period ${pIdx + 1}`;
     
+    if (document.getElementById('editTypeTemporary')) {
+        document.getElementById('editTypeTemporary').checked = true;
+    }
+    
     document.getElementById('editSubjectSelect').value = pData.sub || 'SE';
     document.getElementById('editFaculty').value = pData.faculty || 'Dr.S.K.Harikarthick, ASP/CSE';
     document.getElementById('editVenue').value = pData.venue || 'SF 04';
@@ -1452,27 +1470,46 @@ function savePeriodChanges() {
     const venue = document.getElementById('editVenue').value;
     const cat = document.getElementById('editCategory').value;
 
-    if (!timetableData[currentSection]) {
-        // Deep-clone so a new section doesn't share (and later corrupt) CSE_C's data
-        timetableData[currentSection] = JSON.parse(JSON.stringify(DEFAULT_TIMETABLE_DATA['CSE_C']));
-    }
-    const originalSlot = timetableData[currentSection][day] && timetableData[currentSection][day][pIdx]
-        ? JSON.parse(JSON.stringify(timetableData[currentSection][day][pIdx])) : null;
-    const updatedSlot = { sub, faculty, venue, cat, code: 'MODIFIED' };
-    timetableData[currentSection][day][pIdx] = updatedSlot;
+    const isTemporary = document.getElementById('editTypeTemporary') && document.getElementById('editTypeTemporary').checked;
 
-    // Persist just this slot — every other saved edit stays untouched
-    saveTimetableEdit(currentSection, day, pIdx, updatedSlot);
-    // Notify students only when the faculty assignment actually changes.
-    createFacultyChangeNotification(day, pIdx, originalSlot, updatedSlot, currentSection);
+    if (isTemporary) {
+        const dateStr = todayDateStr();
+        const key = substitutionKey(dateStr, currentSection, day, pIdx);
+        const originalSlot = timetableData[currentSection] && timetableData[currentSection][day] && timetableData[currentSection][day][pIdx]
+            ? timetableData[currentSection][day][pIdx] : null;
+            
+        substitutions[key] = {
+            date: dateStr,
+            section: currentSection,
+            day: day,
+            pIdx: pIdx,
+            originalFaculty: originalSlot ? originalSlot.faculty : 'Unknown',
+            substituteFaculty: faculty,
+            reason: `Temporary override: ${sub} in ${venue}`
+        };
+        saveSubstitutions();
+        createFacultyChangeNotification(day, pIdx, null, null, currentSection);
+        showToast('Temporary Override Saved!', `Assigned ${faculty} to Period ${pIdx + 1} today only. SMS sent to students.`);
+    } else {
+        if (!timetableData[currentSection]) {
+            timetableData[currentSection] = JSON.parse(JSON.stringify(DEFAULT_TIMETABLE_DATA['CSE_C']));
+        }
+        const originalSlot = timetableData[currentSection][day] && timetableData[currentSection][day][pIdx]
+            ? JSON.parse(JSON.stringify(timetableData[currentSection][day][pIdx])) : null;
+        const updatedSlot = { sub, faculty, venue, cat, code: 'MODIFIED' };
+        timetableData[currentSection][day][pIdx] = updatedSlot;
+
+        saveTimetableEdit(currentSection, day, pIdx, updatedSlot);
+        createFacultyChangeNotification(day, pIdx, originalSlot, updatedSlot, currentSection);
+        showToast('Period Permanently Updated!', `Updated base schedule for ${day} Period ${pIdx + 1}. SMS sent to students.`);
+    }
 
     renderTimetableGrid();
+    if (typeof renderTodaysSubstitutions === 'function') renderTodaysSubstitutions();
     
     const modalEl = document.getElementById('editPeriodModal');
     const modal = bootstrap.Modal.getInstance(modalEl);
     modal.hide();
-
-    showToast('Period Updated & Saved!', `Updated ${day} Period ${pIdx + 1} to ${sub} (${faculty}, ${venue}). Saved — will still show this when you relogin. SMS notification sent to ${studentsRoster.length} students.`);
 }
 
 // Quick Wednesday ALT Preset
@@ -1493,6 +1530,8 @@ function quickAssignWednesdayALT() {
 function onFilterChange() {
     currentDept = document.getElementById('deptSelect').value;
     currentSection = document.getElementById('sectionSelect').value;
+    localStorage.setItem('sece_last_viewed_dept', currentDept);
+    localStorage.setItem('sece_last_viewed_section', currentSection);
     
     document.getElementById('ttTitleHeader').innerText = `Class Timetable - Academic Schedule (${currentDept} - ${currentSection})`;
     renderTimetableGrid();

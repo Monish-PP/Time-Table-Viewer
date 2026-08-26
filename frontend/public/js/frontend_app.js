@@ -343,14 +343,15 @@ function clearSavedStudents() {
     if (!confirm('Delete all saved student records from this browser?')) return;
     studentsRoster = [];
     saveStudents();
+    localStorage.setItem('sece_students_roster_v1', JSON.stringify(studentsRoster));
     renderStudentsRoster();
     showToast('Student Records Cleared', 'All locally saved student records were removed.');
 }
 
 // System State
 let currentUserRole = null; // Set only after successful login
-let currentDept = 'CSE';
-let currentSection = 'CSE_C';
+let currentDept = localStorage.getItem('sece_last_viewed_dept') || 'CSE';
+let currentSection = localStorage.getItem('sece_last_viewed_section') || 'CSE_C';
 
 // Official Data Extracted from Uploaded Schedule Image (II CSE C)
 const DEFAULT_TIMETABLE_DATA = {
@@ -695,9 +696,13 @@ function toggleStaffAvailability(idx) {
         alert('Access denied. Only Faculty and Admin can update staff availability.');
         return;
     }
-    const dayKey = 'sece_staff_availability_' + todayDateStr(); const daily = JSON.parse(localStorage.getItem(dayKey) || '{}'); daily[staffDirectory[idx].name] = !(daily[staffDirectory[idx].name] !== false); localStorage.setItem(dayKey, JSON.stringify(daily));
-    renderStaffAvailability();
-    populateSubstituteFacultyOptions();
+    const name = staffDirectory[idx].name;
+    const isLeave = isStaffOnLeaveToday(name);
+    if (isLeave) {
+        cancelStaffLeave(name);
+    } else {
+        markStaffOnLeave(name, "Admin marked as unavailable");
+    }
 }
 
 // Fill the "Period to Cover" dropdown with today's periods for the currently viewed section
@@ -857,7 +862,7 @@ function findTodaysPeriodsForStaff(staffName) {
         const dayData = timetableData[section] && timetableData[section][todayName];
         if (!dayData) return;
         dayData.forEach((p, pIdx) => {
-            if (p && p.faculty === staffName) {
+            if (p && p.faculty && p.faculty.includes(staffName)) {
                 results.push({ section, day: todayName, pIdx, subject: p.sub, venue: p.venue });
             }
         });
@@ -891,35 +896,19 @@ function onStaffIdentityChange() {
     updateLeaveButtonState();
 }
 
-function markMyselfOnLeave() {
-    if (!canManageSubstitutions()) {
-        alert('Only Faculty and Admin can mark themselves on leave.');
-        return;
-    }
-    const name = document.getElementById('myStaffIdentitySelect').value;
-    if (!name) {
-        alert('Please select which staff member you are first.');
-        return;
-    }
-    setMyStaffIdentity(name);
-    const reason = document.getElementById('leaveReasonInput').value || 'On Leave';
-
-    // 1. Mark staff as Unavailable in the directory
+function markStaffOnLeave(name, reason) {
     const staffIdx = staffDirectory.findIndex(s => s.name === name);
     if (staffIdx > -1) staffDirectory[staffIdx].status = 'Unavailable';
     saveStaffDirectory();
 
-    // 2. Auto-mark Unavailable in the daily availability key (Staff Availability table)
     const dateStr = todayDateStr();
     const dayKey = 'sece_staff_availability_' + dateStr;
     const daily = JSON.parse(localStorage.getItem(dayKey) || '{}');
     daily[name] = false;
     localStorage.setItem(dayKey, JSON.stringify(daily));
 
-    // 3. Save the per-staff leave state key so any tab/view can detect it
     localStorage.setItem(leaveStateKey(name), 'true');
 
-    // 4. Create coverage requests for every period this staff teaches today
     const periods = findTodaysPeriodsForStaff(name);
     periods.forEach(p => {
         const key = substitutionKey(dateStr, p.section, p.day, p.pIdx);
@@ -935,7 +924,6 @@ function markMyselfOnLeave() {
     });
     saveCoverageRequests();
 
-    // 5. Create Period Notification entries (source='leave') for each affected period
     const notifArr = purgeExpiredPeriodNotifications();
     const filtered = notifArr.filter(n => !(n.source === 'leave' && n.originalFaculty === name && n.date === dateStr));
     periods.forEach(p => {
@@ -952,12 +940,10 @@ function markMyselfOnLeave() {
     });
     savePeriodNotifications(filtered);
 
-    // 6. Re-render all affected panels
     renderStaffAvailability();
     populateSubstituteFacultyOptions();
     renderCoverageRequests();
     updateLeaveButtonState();
-    document.getElementById('leaveReasonInput').value = '';
 
     showToast('Marked as On Leave',
         periods.length
@@ -966,35 +952,20 @@ function markMyselfOnLeave() {
     );
 }
 
-// Cancels an active leave for the currently selected staff member
-function cancelMyLeave() {
-    if (!canManageSubstitutions()) {
-        alert('Only Faculty and Admin can cancel leave.');
-        return;
-    }
-    const name = getMyStaffIdentity() || document.getElementById('myStaffIdentitySelect')?.value;
-    if (!name) {
-        alert('No staff identity found. Please select your name first.');
-        return;
-    }
-
+function cancelStaffLeave(name) {
     const dateStr = todayDateStr();
 
-    // 1. Remove the leave state key
     localStorage.removeItem(leaveStateKey(name));
 
-    // 2. Restore daily availability
     const dayKey = 'sece_staff_availability_' + dateStr;
     const daily = JSON.parse(localStorage.getItem(dayKey) || '{}');
     delete daily[name];
     localStorage.setItem(dayKey, JSON.stringify(daily));
 
-    // 3. Restore staff directory status
     const staffIdx = staffDirectory.findIndex(s => s.name === name);
     if (staffIdx > -1) staffDirectory[staffIdx].status = 'Available';
     saveStaffDirectory();
 
-    // 4. Remove OPEN coverage requests for this staff today
     let removedCount = 0;
     Object.keys(coverageRequests).forEach(key => {
         const req = coverageRequests[key];
@@ -1005,12 +976,10 @@ function cancelMyLeave() {
     });
     saveCoverageRequests();
 
-    // 5. Remove leave-sourced period notifications for this staff today
     const notifArr = purgeExpiredPeriodNotifications();
     const cleaned = notifArr.filter(n => !(n.source === 'leave' && n.originalFaculty === name && n.date === dateStr));
     savePeriodNotifications(cleaned);
 
-    // 6. Re-render all panels
     renderStaffAvailability();
     populateSubstituteFacultyOptions();
     renderCoverageRequests();
@@ -1021,6 +990,35 @@ function cancelMyLeave() {
             ? `${name}'s leave has been cancelled. ${removedCount} open coverage request(s) removed.`
             : `${name}'s leave has been cancelled.`
     );
+}
+
+function markMyselfOnLeave() {
+    if (!canManageSubstitutions()) {
+        alert('Only Faculty and Admin can mark themselves on leave.');
+        return;
+    }
+    const name = document.getElementById('myStaffIdentitySelect').value;
+    if (!name) {
+        alert('Please select which staff member you are first.');
+        return;
+    }
+    setMyStaffIdentity(name);
+    const reason = document.getElementById('leaveReasonInput').value || 'On Leave';
+    markStaffOnLeave(name, reason);
+    document.getElementById('leaveReasonInput').value = '';
+}
+
+function cancelMyLeave() {
+    if (!canManageSubstitutions()) {
+        alert('Only Faculty and Admin can cancel leave.');
+        return;
+    }
+    const name = getMyStaffIdentity() || document.getElementById('myStaffIdentitySelect')?.value;
+    if (!name) {
+        alert('No staff identity found. Please select your name first.');
+        return;
+    }
+    cancelStaffLeave(name);
 }
 
 // Dynamically updates the leave action button group
@@ -1667,6 +1665,10 @@ function openEditPeriodModal(day, pIdx, pData) {
     document.getElementById('editPeriod').value = pIdx;
     document.getElementById('editSlotLabel').value = `${day} - Period ${pIdx + 1}`;
     
+    if (document.getElementById('editTypeTemporary')) {
+        document.getElementById('editTypeTemporary').checked = true;
+    }
+    
     document.getElementById('editSubjectSelect').value = pData.sub || 'SE';
     document.getElementById('editFaculty').value = pData.faculty || 'Dr.S.K.Harikarthick, ASP/CSE';
     document.getElementById('editVenue').value = pData.venue || 'SF 04';
@@ -1709,27 +1711,46 @@ function savePeriodChanges() {
     const venue = document.getElementById('editVenue').value;
     const cat = document.getElementById('editCategory').value;
 
-    if (!timetableData[currentSection]) {
-        // Deep-clone so a new section doesn't share (and later corrupt) CSE_C's data
-        timetableData[currentSection] = JSON.parse(JSON.stringify(DEFAULT_TIMETABLE_DATA['CSE_C']));
-    }
-    const originalSlot = timetableData[currentSection][day] && timetableData[currentSection][day][pIdx]
-        ? JSON.parse(JSON.stringify(timetableData[currentSection][day][pIdx])) : null;
-    const updatedSlot = { sub, faculty, venue, cat, code: 'MODIFIED' };
-    timetableData[currentSection][day][pIdx] = updatedSlot;
+    const isTemporary = document.getElementById('editTypeTemporary') && document.getElementById('editTypeTemporary').checked;
 
-    // Persist just this slot — every other saved edit stays untouched
-    saveTimetableEdit(currentSection, day, pIdx, updatedSlot);
-    // Notify students only when the faculty assignment actually changes.
-    createFacultyChangeNotification(day, pIdx, originalSlot, updatedSlot, currentSection);
+    if (isTemporary) {
+        const dateStr = todayDateStr();
+        const key = substitutionKey(dateStr, currentSection, day, pIdx);
+        const originalSlot = timetableData[currentSection] && timetableData[currentSection][day] && timetableData[currentSection][day][pIdx]
+            ? timetableData[currentSection][day][pIdx] : null;
+            
+        substitutions[key] = {
+            date: dateStr,
+            section: currentSection,
+            day: day,
+            pIdx: pIdx,
+            originalFaculty: originalSlot ? originalSlot.faculty : 'Unknown',
+            substituteFaculty: faculty,
+            reason: `Temporary override: ${sub} in ${venue}`
+        };
+        saveSubstitutions();
+        createFacultyChangeNotification(day, pIdx, null, null, currentSection);
+        showToast('Temporary Override Saved!', `Assigned ${faculty} to Period ${pIdx + 1} today only. SMS sent to students.`);
+    } else {
+        if (!timetableData[currentSection]) {
+            timetableData[currentSection] = JSON.parse(JSON.stringify(DEFAULT_TIMETABLE_DATA['CSE_C']));
+        }
+        const originalSlot = timetableData[currentSection][day] && timetableData[currentSection][day][pIdx]
+            ? JSON.parse(JSON.stringify(timetableData[currentSection][day][pIdx])) : null;
+        const updatedSlot = { sub, faculty, venue, cat, code: 'MODIFIED' };
+        timetableData[currentSection][day][pIdx] = updatedSlot;
+
+        saveTimetableEdit(currentSection, day, pIdx, updatedSlot);
+        createFacultyChangeNotification(day, pIdx, originalSlot, updatedSlot, currentSection);
+        showToast('Period Permanently Updated!', `Updated base schedule for ${day} Period ${pIdx + 1}. SMS sent to students.`);
+    }
 
     renderTimetableGrid();
+    if (typeof renderTodaysSubstitutions === 'function') renderTodaysSubstitutions();
     
     const modalEl = document.getElementById('editPeriodModal');
     const modal = bootstrap.Modal.getInstance(modalEl);
     modal.hide();
-
-    showToast('Period Updated & Saved!', `Updated ${day} Period ${pIdx + 1} to ${sub} (${faculty}, ${venue}). Saved — will still show this when you relogin. SMS notification sent to ${studentsRoster.length} students.`);
 }
 
 // Quick Wednesday ALT Preset
@@ -1750,6 +1771,8 @@ function quickAssignWednesdayALT() {
 function onFilterChange() {
     currentDept = document.getElementById('deptSelect').value;
     currentSection = document.getElementById('sectionSelect').value;
+    localStorage.setItem('sece_last_viewed_dept', currentDept);
+    localStorage.setItem('sece_last_viewed_section', currentSection);
     
     const customTitle = localStorage.getItem('sece_custom_tt_title_' + currentSection);
     if (customTitle) {
@@ -3555,3 +3578,10 @@ window.saveBatchSemInfo = function() {
     
     bootstrap.Modal.getInstance(document.getElementById('editBatchSemModal')).hide();
 };
+
+// Fix for Bootstrap modal aria-hidden focus warning
+document.addEventListener('hide.bs.modal', function (event) {
+    if (document.activeElement) {
+        document.activeElement.blur();
+    }
+});

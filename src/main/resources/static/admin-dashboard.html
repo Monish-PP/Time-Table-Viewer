@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SRI ESHWAR COLLEGE OF ENGINEERING TIME TABLE VIEWER</title>
+    <title>SRI ESHWAR COLLEGE OF ENGINEERING</title>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
     <!-- Bootstrap 5 CSS -->
@@ -123,10 +123,7 @@
                     <div>
                         <h1 class="h5 mb-0 fw-bold text-white tracking-tight">SRI ESHWAR COLLEGE OF ENGINEERING</h1>
                         <div class="d-flex align-items-center gap-2 mt-1 flex-wrap">
-                            <span class="accreditation-badge"><i class="fa-solid fa-award text-warning me-1"></i> NAAC Accredited</span>
-                            <span class="accreditation-badge"><i class="fa-solid fa-check-double text-info me-1"></i> NBA</span>
-                            <span class="accreditation-badge">NIRF Ranked</span>
-                            <span class="text-info fw-semibold ms-2" style="font-size: 0.75rem;">TIME TABLE VIEWER</span>
+
                         </div>
                     </div>
                 </div>
@@ -415,6 +412,18 @@
                                 <button type="button" class="btn btn-sm btn-outline-warning w-100" onclick="setAsWednesdayALT()">
                                     <i class="fa-solid fa-star me-1"></i> Set Placement ALT
                                 </button>
+                            </div>
+                        </div>
+
+                                                <div class="mb-3">
+                            <label class="form-label small text-muted">Change Type</label>
+                            <div class="form-check">
+                                <input class="form-check-input bg-dark border-secondary" type="radio" name="editPeriodType" id="editTypeTemporary" value="temporary" checked>
+                                <label class="form-check-label small text-info" for="editTypeTemporary">Only for today (Temporary substitution)</label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input bg-dark border-secondary" type="radio" name="editPeriodType" id="editTypePermanent" value="permanent">
+                                <label class="form-check-label small text-warning" for="editTypePermanent">Make permanent (Change base timetable)</label>
                             </div>
                         </div>
 

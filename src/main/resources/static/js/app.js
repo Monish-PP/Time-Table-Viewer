@@ -2,11 +2,16 @@ let currentUser = null;
 let authToken = localStorage.getItem('jwt_token');
 
 document.addEventListener('DOMContentLoaded', () => {
-    if (authToken) {
+    if (authToken && (window.location.pathname === '/' || window.location.pathname.includes('login'))) {
         currentUser = JSON.parse(localStorage.getItem('user_info') || '{}');
-        showMainApp();
-    } else {
-        showLoginPage();
+        const role = currentUser.role || '';
+        if (role === 'ROLE_ADMIN') {
+            window.location.href = '/admin-dashboard.html';
+        } else if (role === 'ROLE_FACULTY') {
+            window.location.href = '/faculty-dashboard.html';
+        } else {
+            window.location.href = '/student-dashboard.html';
+        }
     }
 
     document.getElementById('loginForm')?.addEventListener('submit', handleLogin);
@@ -64,11 +69,17 @@ async function handleLogin(e) {
                 }
             }
         } else {
+            let errorMsg = "Invalid username or password!";
+            if (res.status === 502 || res.status === 504) {
+                errorMsg = "Backend server is down or unreachable.";
+            } else if (res.status !== 401 && res.status !== 403) {
+                errorMsg = "Server error occurred. Try again later.";
+            }
             if (alertBox) {
                 alertBox.classList.remove('d-none');
-                alertBox.innerText = "Invalid username or password!";
+                alertBox.innerText = errorMsg;
             } else {
-                alert("Invalid username or password!");
+                alert(errorMsg);
             }
         }
     } catch (err) {

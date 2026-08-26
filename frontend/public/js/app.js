@@ -52,11 +52,17 @@ async function handleLogin(e) {
             localStorage.setItem('user_info', JSON.stringify(data));
             showMainApp();
         } else {
+            let errorMsg = "Invalid username or password!";
+            if (res.status === 502 || res.status === 504) {
+                errorMsg = "Backend server is down or unreachable.";
+            } else if (res.status !== 401 && res.status !== 403) {
+                errorMsg = "Server error occurred. Try again later.";
+            }
             if (alertBox) {
                 alertBox.classList.remove('d-none');
-                alertBox.innerText = "Invalid username or password!";
+                alertBox.innerText = errorMsg;
             } else {
-                alert("Invalid username or password!");
+                alert(errorMsg);
             }
         }
     } catch (err) {

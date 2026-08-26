@@ -85,7 +85,7 @@ export default function DashboardLayout() {
                 </div>
 
                 <form id="roleLoginForm" onSubmit={(event) => window.handleLogin(event)} >
-                    <input type="hidden" id="selectedLoginRole" value="STUDENT" />
+                    <input type="hidden" id="selectedLoginRole" defaultValue="STUDENT" />
 
                     <div className="mb-3">
                         <label className="form-label small text-white fw-semibold">Username</label>
@@ -136,10 +136,7 @@ export default function DashboardLayout() {
                     <div>
                         <h1 className="h5 mb-0 fw-bold text-white tracking-tight">SRI ESHWAR COLLEGE OF ENGINEERING</h1>
                         <div className="d-flex align-items-center gap-2 mt-1 flex-wrap">
-                            <span className="accreditation-badge"><i className="fa-solid fa-award text-warning me-1"></i> NAAC Accredited</span>
-                            <span className="accreditation-badge"><i className="fa-solid fa-check-double text-info me-1"></i> NBA</span>
-                            <span className="accreditation-badge">NIRF Ranked</span>
-                            <span className="text-info fw-semibold ms-2" style={{fontSize: "0.75rem"}}>TIME TABLE VIEWER</span>
+
                         </div>
                     </div>
                 </div>
@@ -250,8 +247,8 @@ export default function DashboardLayout() {
                 
                 <div className="col-md-3 col-sm-6" id="deptFilterWrapper">
                     <label className="form-label text-muted fw-semibold small mb-1"><i className="fa-solid fa-building-columns text-primary me-1"></i> Department</label>
-                    <select id="deptSelect" className="form-select form-select-sm bg-dark text-white border-secondary" onChange={() => window.onFilterChange()} >
-                        <option value="CSE" selected>CSE - Computer Science & Engg</option>
+                    <select id="deptSelect" defaultValue="CSE" className="form-select form-select-sm bg-dark text-white border-secondary" onChange={() => window.onFilterChange()} >
+                        <option value="CSE">CSE - Computer Science & Engg</option>
                         <option value="IT">IT - Information Technology</option>
                         <option value="AIDS">AI&DS - Artificial Intelligence & Data Science</option>
                         <option value="ECE">ECE - Electronics & Comm Engg</option>
@@ -265,8 +262,8 @@ export default function DashboardLayout() {
                 
                 <div className="col-md-2 col-sm-6" id="secFilterWrapper">
                     <label className="form-label text-muted fw-semibold small mb-1"><i className="fa-solid fa-layer-group text-info me-1"></i> Section</label>
-                    <select id="sectionSelect" className="form-select form-select-sm bg-dark text-white border-secondary" onChange={() => window.onFilterChange()} >
-                        <option value="CSE_C" selected>II CSE C [SF 04]</option>
+                    <select id="sectionSelect" defaultValue="CSE_C" className="form-select form-select-sm bg-dark text-white border-secondary" onChange={() => window.onFilterChange()} >
+                        <option value="CSE_C">II CSE C [SF 04]</option>
                         <option value="CSE_A">II CSE A [SF 02]</option>
                         <option value="CSE_B">II CSE B [SF 03]</option>
                         <option value="IT_A">II IT A [IT 101]</option>
@@ -384,7 +381,7 @@ export default function DashboardLayout() {
     </div> 
 
     
-    <div className="modal fade" id="editPeriodModal" tabindex="-1">
+    <div className="modal fade" id="editPeriodModal" tabIndex="-1">
         <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content bg-dark text-white border-secondary">
                 <div className="modal-header border-secondary">
@@ -400,7 +397,7 @@ export default function DashboardLayout() {
 
                         <div className="mb-3">
                             <label className="form-label small text-muted">Selected Slot</label>
-                            <input type="text" id="editSlotLabel" className="form-readonly form-control form-control-sm bg-secondary  border-0" readonly />
+                            <input type="text" id="editSlotLabel" className="form-readonly form-control form-control-sm bg-secondary  border-0" readOnly />
                         </div>
 
                         <div className="mb-3">
@@ -431,11 +428,11 @@ export default function DashboardLayout() {
                         <div className="row g-2 mb-3">
                             <div className="col-md-6">
                                 <label className="form-label small text-muted">Faculty Incharge</label>
-                                <input type="text" id="editFaculty" className="form-control form-control-sm bg-dark text-white border-secondary" value="Dr.S.K.Harikarthick, ASP/CSE" />
+                                <input type="text" id="editFaculty" className="form-control form-control-sm bg-dark text-white border-secondary" defaultValue="Dr.S.K.Harikarthick, ASP/CSE" />
                             </div>
                             <div className="col-md-6">
                                 <label className="form-label small text-muted">Venue / Classroom / Lab</label>
-                                <input type="text" id="editVenue" list="savedVenueOptions" className="form-control form-control-sm bg-dark text-white border-secondary" value="SF 04" />
+                                <input type="text" id="editVenue" list="savedVenueOptions" className="form-control form-control-sm bg-dark text-white border-secondary" defaultValue="SF 04" />
                             </div>
                         </div>
 
@@ -456,6 +453,18 @@ export default function DashboardLayout() {
                             </div>
                         </div>
 
+                                                <div className="mb-3">
+                            <label className="form-label small text-muted">Change Type</label>
+                            <div className="form-check">
+                                <input className="form-check-input bg-dark border-secondary" type="radio" name="editPeriodType" id="editTypeTemporary" value="temporary" defaultChecked />
+                                <label className="form-check-label small text-info" htmlFor="editTypeTemporary">Only for today (Temporary substitution)</label>
+                            </div>
+                            <div className="form-check">
+                                <input className="form-check-input bg-dark border-secondary" type="radio" name="editPeriodType" id="editTypePermanent" value="permanent" />
+                                <label className="form-check-label small text-warning" htmlFor="editTypePermanent">Make permanent (Change base timetable)</label>
+                            </div>
+                        </div>
+
                         <div className="alert alert-warning py-2 small mb-0">
                             <i className="fa-solid fa-triangle-exclamation me-1"></i> Saving changes will automatically send SMS & Email notifications to all enrolled students in this section.
                         </div>
@@ -470,7 +479,7 @@ export default function DashboardLayout() {
     </div>
 
     
-    <div className="modal fade" id="notificationModal" tabindex="-1">
+    <div className="modal fade" id="notificationModal" tabIndex="-1">
         <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content bg-dark text-white border-secondary">
                 <div className="modal-header border-secondary">
@@ -502,15 +511,15 @@ export default function DashboardLayout() {
                         <div className="mb-3">
                             <label className="form-label small text-white">Select Notification Preferences</label>
                             <div className="form-check">
-                                <input className="form-check-input" type="checkbox" id="prefClassAlert" checked />
+                                <input className="form-check-input" type="checkbox" id="prefClassAlert" defaultChecked />
                                 <label className="form-check-label small" htmlFor="prefClassAlert">15 Minutes Before Class Reminder</label>
                             </div>
                             <div className="form-check" id="prefTimetableContainer">
-                                <input className="form-check-input" type="checkbox" id="prefChangeAlert" checked />
+                                <input className="form-check-input" type="checkbox" id="prefChangeAlert" defaultChecked />
                                 <label className="form-check-label small" htmlFor="prefChangeAlert">Timetable / Period Substitution SMS Alert</label>
                             </div>
                             <div className="form-check" id="prefWedContainer">
-                                <input className="form-check-input" type="checkbox" id="prefWednesdayALT" checked />
+                                <input className="form-check-input" type="checkbox" id="prefWednesdayALT" defaultChecked />
                                 <label className="form-check-label small" htmlFor="prefWednesdayALT">Wednesday Placement ALT Class Reminder</label>
                             </div>
                         </div>
@@ -523,7 +532,7 @@ export default function DashboardLayout() {
     </div>
 
     
-    <div className="modal fade" id="forgotPasswordModal" tabindex="-1">
+    <div className="modal fade" id="forgotPasswordModal" tabIndex="-1">
         <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content bg-dark text-white border-secondary">
                 <div className="modal-header border-secondary">
@@ -575,7 +584,7 @@ export default function DashboardLayout() {
 
 
     
-    <div className="modal fade" id="manageRosterModal" tabindex="-1">
+    <div className="modal fade" id="manageRosterModal" tabIndex="-1">
         <div className="modal-dialog modal-lg modal-dialog-centered">
             <div className="modal-content bg-dark text-white border-secondary">
                 <div className="modal-header border-secondary">
@@ -689,7 +698,7 @@ export default function DashboardLayout() {
                                             </div>
                                                                                         <div className="mb-2">
                                                 <label className="form-label small">Max Capacity</label>
-                                                <input type="number" id="secCapacity" min="0" max="80" className="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Max 80" value="60" required />
+                                                <input type="number" id="secCapacity" min="0" max="80" className="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Max 80" defaultValue="60" required />
                                             </div>
                                             <button type="submit" className="btn btn-sm btn-info w-100 font-semibold"><i className="fa-solid fa-plus me-1"></i> Create Section</button>
                                         </form>
@@ -714,7 +723,7 @@ export default function DashboardLayout() {
 
 
     
-    <div className="modal fade" id="facultyDetailsModal" tabindex="-1">
+    <div className="modal fade" id="facultyDetailsModal" tabIndex="-1">
         <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
             <div className="modal-content bg-dark text-white border-secondary">
                 <div className="modal-header border-secondary">
@@ -772,7 +781,7 @@ export default function DashboardLayout() {
     </div>
 
     
-    <div className="modal fade" id="classAdvisorLoginModal" tabindex="-1">
+    <div className="modal fade" id="classAdvisorLoginModal" tabIndex="-1">
         <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content bg-dark text-white border-secondary">
                 <div className="modal-header border-secondary">
@@ -800,7 +809,7 @@ export default function DashboardLayout() {
     </div>
 
     
-    <div className="modal fade" id="classAdvisorViewModal" tabindex="-1">
+    <div className="modal fade" id="classAdvisorViewModal" tabIndex="-1">
         <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
             <div className="modal-content bg-dark text-white border-secondary">
                 <div className="modal-header border-secondary">
@@ -879,7 +888,7 @@ export default function DashboardLayout() {
     </div>
 
     
-    <div className="modal fade" id="adminResourcesModal" tabindex="-1">
+    <div className="modal fade" id="adminResourcesModal" tabIndex="-1">
         <div className="modal-dialog modal-lg modal-dialog-centered">
             <div className="modal-content bg-dark text-white border-secondary">
                 <div className="modal-header border-secondary">
@@ -942,11 +951,11 @@ export default function DashboardLayout() {
         </div>
     </div>
 
-    <div className="modal fade" id="studentDayNotificationModal" tabindex="-1"><div className="modal-dialog modal-lg modal-dialog-centered"><div className="modal-content bg-dark text-white border-secondary"><div className="modal-header border-secondary"><h5 className="modal-title text-info fw-bold"><i className="fa-solid fa-bell me-2"></i> Day / Period Notifications</h5><button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div className="modal-body"><div id="periodNotificationsList"></div><div id="periodNotificationAdminForm" className="d-none border-top border-secondary pt-3 mt-3"><h6 className="text-warning">Add Notification</h6><form onSubmit={(event) => window.handlePeriodNotification(event)} ><div className="row g-2"><div className="col-md-3"><select id="pnDay" className="form-select form-select-sm bg-dark text-white border-secondary"><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option></select></div><div className="col-md-3"><input id="pnPeriod" type="number" min="1" max="7" className="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Period" required /></div><div className="col-md-6"><input id="pnStaff" className="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Handling staff" required /></div><div className="col-md-12"><input id="pnReason" className="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Reason" required /></div><div className="col-12"><button className="btn btn-sm btn-info">Save Notification</button></div></div></form></div></div></div></div></div>
+    <div className="modal fade" id="studentDayNotificationModal" tabIndex="-1"><div className="modal-dialog modal-lg modal-dialog-centered"><div className="modal-content bg-dark text-white border-secondary"><div className="modal-header border-secondary"><h5 className="modal-title text-info fw-bold"><i className="fa-solid fa-bell me-2"></i> Day / Period Notifications</h5><button type="button" className="btn-close btn-close-white" data-bs-dismiss="modal"></button></div><div className="modal-body"><div id="periodNotificationsList"></div><div id="periodNotificationAdminForm" className="d-none border-top border-secondary pt-3 mt-3"><h6 className="text-warning">Add Notification</h6><form onSubmit={(event) => window.handlePeriodNotification(event)} ><div className="row g-2"><div className="col-md-3"><select id="pnDay" className="form-select form-select-sm bg-dark text-white border-secondary"><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option></select></div><div className="col-md-3"><input id="pnPeriod" type="number" min="1" max="7" className="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Period" required /></div><div className="col-md-6"><input id="pnStaff" className="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Handling staff" required /></div><div className="col-md-12"><input id="pnReason" className="form-control form-control-sm bg-dark text-white border-secondary" placeholder="Reason" required /></div><div className="col-12"><button className="btn btn-sm btn-info">Save Notification</button></div></div></form></div></div></div></div></div>
 
     
 
-    <div className="modal fade" id="substitutionModal" tabindex="-1">
+    <div className="modal fade" id="substitutionModal" tabIndex="-1">
         <div className="modal-dialog modal-lg modal-dialog-centered">
             <div className="modal-content bg-dark text-white border-secondary">
                 <div className="modal-header border-secondary">
@@ -1004,7 +1013,7 @@ export default function DashboardLayout() {
                                 </div>
                                 <div className="mb-2">
                                     <label className="form-label small">Original Faculty</label>
-                                    <input type="text" id="subOriginalFaculty" className="form-control form-control-sm bg-dark text-white border-secondary" readonly />
+                                    <input type="text" id="subOriginalFaculty" className="form-control form-control-sm bg-dark text-white border-secondary" readOnly />
                                 </div>
                                 <div className="mb-2">
                                     <label className="form-label small">Substitute Faculty (only staff marked Available are listed)</label>
@@ -1077,7 +1086,7 @@ export default function DashboardLayout() {
     <script src="/js/frontend_app.js"></script>
 <script src="/js/theme.js"></script>
     
-    <div className="modal fade" id="studentDetailsOnlyModal" tabindex="-1">
+    <div className="modal fade" id="studentDetailsOnlyModal" tabIndex="-1">
         <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
             <div className="modal-content bg-dark text-white border-secondary">
                 <div className="modal-header border-secondary">
@@ -1103,7 +1112,7 @@ export default function DashboardLayout() {
     </div>
 
     {/* Manage Students Modal */}
-    <div className="modal fade" id="manageStudentsModal" tabindex="-1">
+    <div className="modal fade" id="manageStudentsModal" tabIndex="-1">
         <div className="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
             <div className="modal-content bg-dark text-white border-secondary">
                 <div className="modal-header border-secondary">
@@ -1209,7 +1218,7 @@ export default function DashboardLayout() {
     </div>
 
     {/* Admin View Full Faculty Details Modal */}
-    <div className="modal fade" id="adminViewFacultyModal" tabindex="-1">
+    <div className="modal fade" id="adminViewFacultyModal" tabIndex="-1">
         <div className="modal-dialog modal-xl modal-dialog-centered">
             <div className="modal-content bg-dark text-white border-secondary">
                 <div className="modal-header border-secondary">
@@ -1243,7 +1252,7 @@ export default function DashboardLayout() {
     </div>
 
     {/* Manage Faculty Modal */}
-    <div className="modal fade" id="manageFacultyModal" tabindex="-1">
+    <div className="modal fade" id="manageFacultyModal" tabIndex="-1">
         <div className="modal-dialog modal-lg modal-dialog-centered">
             <div className="modal-content bg-dark text-white border-secondary">
                 <div className="modal-header border-secondary">
